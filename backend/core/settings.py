@@ -43,9 +43,9 @@ INSTALLED_APPS = [
 
 # --- Middleware ---
 MIDDLEWARE = [
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Serve static files in prod
+    "django.middleware.security.SecurityMiddleware",  # Security headers
+    "whitenoise.middleware.WhiteNoiseMiddleware",     # Serve static files in production
     "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -101,7 +101,7 @@ USE_TZ = True
 # --- Static & Media ---
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"  # For collectstatic in production
-STATICFILES_DIRS = [BASE_DIR / "static"]  # optional for local static files
+STATICFILES_DIRS = [BASE_DIR / "static"]  # Optional for local development
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
