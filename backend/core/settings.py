@@ -18,11 +18,13 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,caps-em1t.onrender.com"
+    "DJANGO_ALLOWED_HOSTS",
+    "localhost,127.0.0.1,caps-em1t.onrender.com"
 ).split(",")
 
 # --- Applications ---
 INSTALLED_APPS = [
+    # Django default apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -30,7 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party
+    # Third-party apps
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -43,9 +45,9 @@ INSTALLED_APPS = [
 
 # --- Middleware ---
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",  # Security headers
-    "whitenoise.middleware.WhiteNoiseMiddleware",     # Serve static files in production
-    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",           # Security headers
+    "whitenoise.middleware.WhiteNoiseMiddleware",            # Static files in production
+    "corsheaders.middleware.CorsMiddleware",                 # CORS
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -79,8 +81,12 @@ WSGI_APPLICATION = "core.wsgi.application"
 # --- Database ---
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
+        "NAME": os.environ.get("DB_NAME", BASE_DIR / "db.sqlite3"),
+        "USER": os.environ.get("DB_USER", ""),
+        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
+        "HOST": os.environ.get("DB_HOST", ""),
+        "PORT": os.environ.get("DB_PORT", ""),
     }
 }
 
@@ -100,8 +106,8 @@ USE_TZ = True
 
 # --- Static & Media ---
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"  # For collectstatic in production
-STATICFILES_DIRS = [BASE_DIR / "static"]  # Optional for local development
+STATIC_ROOT = BASE_DIR / "staticfiles"  # Production
+STATICFILES_DIRS = [BASE_DIR / "static"]  # Local dev
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
@@ -123,6 +129,7 @@ REST_FRAMEWORK = {
     ],
 }
 
+# --- JWT settings ---
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
@@ -131,14 +138,15 @@ SIMPLE_JWT = {
 # --- CORS & CSRF ---
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = os.environ.get(
     "CORS_ALLOWED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000"
+    "http://localhost:3000,http://127.0.0.1:3000,https://your-frontend.vercel.app"
 ).split(",")
 
 CSRF_TRUSTED_ORIGINS = os.environ.get(
     "CSRF_TRUSTED_ORIGINS",
-    "http://localhost:3000,http://127.0.0.1:3000"
+    "http://localhost:3000,http://127.0.0.1:3000,https://your-frontend.vercel.app"
 ).split(",")
 
 # --- Email ---
@@ -147,9 +155,18 @@ EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "happyphhomes@gmail.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "hlla ujjd bpjg dfqx")  # App password
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", f"Happy Homes <{EMAIL_HOST_USER}>")
 CONTACT_INBOX_EMAIL = os.environ.get("CONTACT_INBOX_EMAIL", DEFAULT_FROM_EMAIL)
 
 # --- Frontend URL ---
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
+# --- Security headers for production ---
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
