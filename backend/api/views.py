@@ -8,6 +8,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.db.models import Q
 
+
 # DRF imports
 from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes, action
@@ -126,11 +127,11 @@ def send_verification_email(request):
     cache.set(email, code, timeout=300)  # valid for 5 minutes
 
     send_mail(
-        'Your Verification Code',
-        f'Your Happy Homes verification code is: {code}',
-        'no-reply@happyhomes.com',
-        [email],
-        fail_silently=False,
+    'Your Verification Code',
+    f'Your Happy Homes verification code is: {code}',
+    settings.DEFAULT_FROM_EMAIL,
+    [email],
+    fail_silently=False,
     )
 
     return Response({'message': 'Verification code sent'})

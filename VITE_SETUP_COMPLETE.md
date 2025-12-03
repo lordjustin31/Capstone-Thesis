@@ -6,7 +6,7 @@
 1. ✅ Created `vite.config.ts` with:
    - React plugin configured
    - Dev server on port 3000
-   - Proxy to Django backend at `http://localhost:8000/api`
+   - Proxy to Django backend at `https://caps-em1t.onrender.com/api`
    - Build output to `dist/` directory
    - Path alias `@` for `src/` directory
 
@@ -18,7 +18,7 @@
    - `npm run preview` - Preview build locally
 
 4. ✅ Created `.env` file with API configuration:
-   - `VITE_API_URL=http://localhost:8000/api`
+   - `VITE_API_URL=https://caps-em1t.onrender.com/api`
 
 ### Backend Configuration
 - ✅ CORS is already properly configured
@@ -42,7 +42,7 @@ npm install  # If not already done
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000` and will automatically proxy API requests to `http://localhost:8000/api`
+The frontend will be available at `http://localhost:3000` and will automatically proxy API requests to `https://caps-em1t.onrender.com/api`
 
 ---
 
@@ -51,7 +51,7 @@ Your axios or fetch calls can use:
 ```typescript
 const API_URL = import.meta.env.VITE_API_URL;
 // or
-const API_URL = 'http://localhost:8000/api';
+const API_URL = 'https://caps-em1t.onrender.com/api';
 ```
 
 ## Next Steps

@@ -44,6 +44,7 @@ router.register(r'visitor-requests', VisitorRequestViewSet, basename='visitor-re
 router.register(r'maintenance-requests', MaintenanceRequestViewSet, basename='maintenance-request')
 router.register(r'maintenance-providers', MaintenanceProviderViewSet, basename='maintenance-provider')
 
+
 urlpatterns = [
     path('register/', register),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

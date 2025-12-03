@@ -139,9 +139,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
+    "https://caps-rouge.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://caps-rouge.vercel.app",
+   
     "https://caps-em1t.onrender.com",
 ]
 
