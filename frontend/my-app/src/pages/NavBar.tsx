@@ -674,7 +674,7 @@ export default NavBar;
 //     const token = localStorage.getItem('access');
 //     if (token) {
 //       axios
-//         .get('http://localhost:8000/api/profile/', {
+//         .get('https://caps-em1t.onrender.com/api/profile/', {
 //           headers: { Authorization: `Bearer ${token}` }
 //         })
 //         .then(res => {

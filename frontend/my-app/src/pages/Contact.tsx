@@ -53,7 +53,7 @@ const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
       isHtml: true // Ensure your backend interprets this
     };
 
-    const response = await fetch('http://localhost:8000/api/notifications/send-email/', {
+    const response = await fetch('https://caps-em1t.onrender.com/api/notifications/send-email/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(emailPayload),

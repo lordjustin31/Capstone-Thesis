@@ -213,7 +213,7 @@ const ClickCoordinates: React.FC<ClickCoordinatesProps> = ({
         const name = prompt("Enter pin name:");
         if (!name) return;
 
-        fetch("http://localhost:8000/api/url/", {
+        fetch("https://caps-em1t.onrender.com/api/url/", {
           method: "POST",
           credentials: "include",
           headers: {
@@ -286,7 +286,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
   const circleRadius = 150;
 
   const fetchPins = useCallback(() => {
-    fetch("http://localhost:8000/api/url/", {
+    fetch("https://caps-em1t.onrender.com/api/url/", {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -389,7 +389,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
 
 const handleDelete = (pin: Pin) => {
   if (!window.confirm(`Are you sure you want to delete pin "${pin.name}"?`)) return;
-  fetch(`http://localhost:8000/api/url/${pin.id}/`, {
+  fetch(`https://caps-em1t.onrender.com/api/url/${pin.id}/`, {
     method: "DELETE",
     credentials: "include",
     headers: { "X-CSRFToken": csrftoken },
@@ -405,7 +405,7 @@ const handleDelete = (pin: Pin) => {
 const handleEdit = (pin: Pin) => {
   const newName = prompt("Enter new name:", pin.name);
   if (!newName || newName === pin.name) return;
-  fetch(`http://localhost:8000/api/url/${pin.id}/`, {
+  fetch(`https://caps-em1t.onrender.com/api/url/${pin.id}/`, {
     method: "PUT",
     credentials: "include",
     headers: {

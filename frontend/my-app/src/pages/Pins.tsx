@@ -16,7 +16,7 @@ const Pins: React.FC = () => {
   useEffect(() => {
     const fetchPins = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/pins/", {
+        const res = await fetch("https://caps-em1t.onrender.com/api/pins/", {
           credentials: "include", // if using session auth
         });
         if (!res.ok) throw new Error(`Error ${res.status}`);

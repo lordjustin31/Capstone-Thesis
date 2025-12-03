@@ -414,7 +414,7 @@ const UserMapPage: React.FC = () => {
   const circleRadius = 150;
 
   const fetchPins = useCallback(() => {
-    fetch("http://localhost:8000/api/url/", {
+    fetch("https://caps-em1t.onrender.com/api/url/", {
       credentials: "include",
     })
       .then((res) => res.json())
@@ -432,7 +432,7 @@ const UserMapPage: React.FC = () => {
   const fetchReviews = useCallback(async (pinId: number) => {
     try {
       const token = localStorage.getItem("access");
-      const response = await fetch(`http://localhost:8000/api/reviews/?pin_id=${pinId}`, {
+      const response = await fetch(`https://caps-em1t.onrender.com/api/reviews/?pin_id=${pinId}`, {
         headers: token ? {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -479,7 +479,7 @@ const UserMapPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem("access");
-      const response = await fetch("http://localhost:8000/api/reviews/", {
+      const response = await fetch("https://caps-em1t.onrender.com/api/reviews/", {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -766,7 +766,7 @@ export default UserMapPage;
 //   const circleRadius = 150;
 
 //   const fetchPins = useCallback(() => {
-//     fetch("http://localhost:8000/api/url/", {
+//     fetch("https://caps-em1t.onrender.com/api/url/", {
 //       credentials: "include",
 //     })
 //       .then((res) => res.json())

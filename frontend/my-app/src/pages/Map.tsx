@@ -735,7 +735,7 @@ const PinPopupEditor: React.FC<PinPopupEditorProps> = ({ pin, isAdmin, onDelete,
       });
     }
 
-    fetch(`http://localhost:8000/api/url/${pin.id}/`, {
+    fetch(`https://caps-em1t.onrender.com/api/url/${pin.id}/`, {
       method: "PUT",
       credentials: "include",
       headers,
@@ -1154,7 +1154,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
   const fetchPins = useCallback(() => {
     console.log('Fetching pins from backend...');
     // Try to fetch from backend first, fallback to sample data
-    fetch("http://localhost:8000/api/url/", {
+    fetch("https://caps-em1t.onrender.com/api/url/", {
       credentials: "include",
     })
       .then((res) => {
@@ -1246,7 +1246,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
     }
 
     // Try to save to backend first
-    fetch("http://localhost:8000/api/url/", {
+    fetch("https://caps-em1t.onrender.com/api/url/", {
       method: "POST",
       credentials: "include",
       headers,
@@ -1351,7 +1351,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
   // Fetch real-time occupancy data
   const fetchOccupancyData = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/subdivisions/occupancy_stats/", {
+      const response = await fetch("https://caps-em1t.onrender.com/api/subdivisions/occupancy_stats/", {
         credentials: "include",
       });
       
@@ -1410,7 +1410,7 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
   // Real-time data fetching function
   const fetchRealTimeData = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/subdivisions/real_time_data/", {
+      const response = await fetch("https://caps-em1t.onrender.com/api/subdivisions/real_time_data/", {
         credentials: "include",
       });
       
@@ -1428,14 +1428,14 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
       } else {
         console.log('Failed to fetch real-time data, using individual fetches');
         // Use direct fetch instead of callbacks to avoid dependency issues
-        fetch("http://localhost:8000/api/url/", {
+        fetch("https://caps-em1t.onrender.com/api/url/", {
           credentials: "include",
         })
           .then((res) => res.ok ? res.json() : Promise.reject())
           .then((data: Pin[]) => setPins(data))
           .catch(() => {});
         
-        fetch("http://localhost:8000/api/subdivisions/occupancy_stats/", {
+        fetch("https://caps-em1t.onrender.com/api/subdivisions/occupancy_stats/", {
           credentials: "include",
         })
           .then((res) => res.ok ? res.json() : Promise.reject())
@@ -1445,14 +1445,14 @@ const MapPage: React.FC<MapPageProps> = ({ isAdmin }) => {
     } catch (error) {
       console.log('Error fetching real-time data:', error);
       // Fallback to individual fetches
-      fetch("http://localhost:8000/api/url/", {
+      fetch("https://caps-em1t.onrender.com/api/url/", {
         credentials: "include",
       })
         .then((res) => res.ok ? res.json() : Promise.reject())
         .then((data: Pin[]) => setPins(data))
         .catch(() => {});
       
-      fetch("http://localhost:8000/api/subdivisions/occupancy_stats/", {
+      fetch("https://caps-em1t.onrender.com/api/subdivisions/occupancy_stats/", {
         credentials: "include",
       })
         .then((res) => res.ok ? res.json() : Promise.reject())
@@ -1486,7 +1486,7 @@ const handleDelete = (pin: Pin) => {
   console.log('Deleting pin:', pin.id);
   
   // Try backend first, fallback to local state update
-  fetch(`http://localhost:8000/api/url/${pin.id}/`, {
+  fetch(`https://caps-em1t.onrender.com/api/url/${pin.id}/`, {
     method: "DELETE",
     credentials: "include",
     headers: { "X-CSRFToken": getCSRFToken(), ...getAuthHeaders() },
@@ -1555,7 +1555,7 @@ const handleEdit = (pin: Pin) => {
   console.log('Editing pin:', pin.id, 'to name:', newName);
   
   // Try backend first, fallback to local state update
-  fetch(`http://localhost:8000/api/url/${pin.id}/`, {
+  fetch(`https://caps-em1t.onrender.com/api/url/${pin.id}/`, {
     method: "PUT",
     credentials: "include",
     headers: {
