@@ -37,7 +37,7 @@ urlpatterns = [
     path("api/user-history/", UserHistoryListView.as_view(), name="user-history"),
     path('api/admin/pending-verifications/', views.pending_verifications, name='pending_verifications'),
     path('api/admin/verify-user/<int:user_id>/', views.verify_user, name='verify_user'),
-    path("visitor/active/", active_visitors, name="active_visitors"),
+    path("visitor/active/", active_visitors, name="active_visitors"),   
     
  
         # reCAPTCHA verification endpoint
