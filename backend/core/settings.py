@@ -70,11 +70,24 @@ if not SECRET_KEY:
 # ---------------------------------------------------------
 # ALLOWED HOSTS
 # ---------------------------------------------------------
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
+# Check for ALLOW_ALL_HOSTS (from render.yaml) or ALLOWED_HOSTS
+ALLOW_ALL_HOSTS = os.environ.get("ALLOW_ALL_HOSTS", "False").lower() == "true"
+ALLOWED_HOSTS_ENV = os.environ.get("ALLOWED_HOSTS", "").strip()
 
-if ALLOWED_HOSTS == [""]:
+if ALLOW_ALL_HOSTS:
+    # Allow all hosts (for Render or when explicitly enabled)
+    ALLOWED_HOSTS = ["*"]
+elif ALLOWED_HOSTS_ENV:
+    # Use explicitly set hosts
+    ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_ENV.split(",") if host.strip()]
+else:
     # Default settings
-    ALLOWED_HOSTS = ["*"] if DEBUG else ["onrender.com"]
+    if DEBUG:
+        ALLOWED_HOSTS = ["*"]
+    else:
+        # Production: allow all hosts (Render handles routing)
+        # For better security, set ALLOWED_HOSTS env var with specific domains
+        ALLOWED_HOSTS = ["*"]
 
 # ---------------------------------------------------------
 # INSTALLED APPS
