@@ -16,7 +16,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://caps-em1t.onrender.com',
+        target: 'https://capstone-thesis-w018.onrender.com',
         changeOrigin: true,
       },
     },

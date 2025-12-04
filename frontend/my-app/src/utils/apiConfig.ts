@@ -2,7 +2,7 @@
 // Use this utility to get the correct API base URL for all API calls
 
 const getApiBaseUrl = (): string => {
-  // Check for environment variable first (for production)
+  // Check for environment variable first (for production/Vercel)
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '');
   }
@@ -13,9 +13,8 @@ const getApiBaseUrl = (): string => {
   } else if (window.location.hostname.startsWith("192.168.")) {
     return `http://${window.location.hostname}:8000`;
   } else {
-    // Production - use same hostname (for when frontend and backend share domain)
-    // For Render, set VITE_API_BASE_URL to your backend URL
-    return `${window.location.protocol}//${window.location.hostname}`;
+    // Production - use new Render backend URL
+    return "https://capstone-thesis-w018.onrender.com";
   }
 };
 

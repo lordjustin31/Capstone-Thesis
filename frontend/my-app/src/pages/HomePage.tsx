@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, FormEvent } from 'react';
 import { getToken, logout } from '../utils/auth';
+import { API_BASE_URL } from '../utils/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import NavBar from './NavBar';
 import Footer from './Footer';
@@ -211,7 +212,7 @@ const HomePage: React.FC = () => {
     }
 
     // Fetch profile
-    fetch('https://caps-em1t.onrender.com/api/profile/', {
+    fetch(`${API_BASE_URL}/api/profile/`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
