@@ -11,13 +11,36 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- Security ---
-# SECRET_KEY must be set via environment variable - NEVER commit this!
+# DEBUG defaults to True for local development
+# Set DEBUG=False in production via environment variable
+DEBUG_ENV = os.environ.get("DEBUG", "").lower()
+if DEBUG_ENV == "false":
+    DEBUG = False
+elif DEBUG_ENV == "true":
+    DEBUG = True
+else:
+    # Default to True for local development if not explicitly set
+    # Check if we're likely in production (Render sets RENDER env var)
+    DEBUG = "RENDER" not in os.environ
+
+# SECRET_KEY must be set via environment variable in production
+# For local development, a fallback key is provided (NEVER use in production!)
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable is required!")
-
-# DEBUG must be False in production - set via environment variable
-DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+    if DEBUG:
+        # Development-only fallback key - DO NOT use in production!
+        SECRET_KEY = "django-insecure-dev-key-only-for-local-development-change-in-production"
+        import warnings
+        warnings.warn(
+            "SECRET_KEY not set! Using development fallback. "
+            "Set SECRET_KEY environment variable for production.",
+            UserWarning
+        )
+    else:
+        raise ValueError(
+            "SECRET_KEY environment variable is required in production! "
+            "Set it in your environment variables."
+        )
 
 # ALLOWED_HOSTS - for production, set specific domains
 # For Render: use your Render service URL or set via environment variable
@@ -87,10 +110,21 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # --- Database ---
-# Uses PostgreSQL on Render (via DATABASE_URL env var) or empty string for local SQLite fallback
-DATABASES = {
-    "default": dj_database_url.config(default="")
-}
+# Uses PostgreSQL on Render (via DATABASE_URL env var) or SQLite for local development
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    # Production: Use PostgreSQL from DATABASE_URL
+    DATABASES = {
+        "default": dj_database_url.config(default=DATABASE_URL)
+    }
+else:
+    # Development: Use SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # --- Password validators ---
 AUTH_PASSWORD_VALIDATORS = [
@@ -109,7 +143,9 @@ USE_TZ = True
 # --- Static & Media ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'  # Production
-STATICFILES_DIRS = [BASE_DIR / "static"]  # Local dev
+# Only include static directory if it exists (to avoid warnings)
+static_dir = BASE_DIR / "static"
+STATICFILES_DIRS = [static_dir] if static_dir.exists() else []
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
@@ -162,6 +198,8 @@ else:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ]
 
 # --- Email ---
