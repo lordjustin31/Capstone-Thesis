@@ -9,21 +9,36 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: SECRET_KEY
-        generateValue: true
+        sync: false
+        value: 7xo@utZqtj(zjptCTDRV%ILR)dyBz1rTeI4a1HZTCznwY^b9mH
       - key: DEBUG
-        value: False
+        value: "False"
       - key: ALLOW_ALL_HOSTS
-        value: True
-      - key: FRONTEND_URL
-        fromService:
-          type: static_site
-          name: happy-homes-frontend
-          property: host
+        value: "True"
+      - key: ALLOWED_HOSTS
+        value: capstone-thesis-w018.onrender.com,*.onrender.com
+      - key: CORS_ALLOW_ALL_ORIGINS
+        value: "True"
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://capstone-thesis-w018.onrender.com,https://*.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://capstone-thesis-w018.onrender.com
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
       - key: EMAIL_HOST_USER
         sync: false
         value: happyphhomes@gmail.com
       - key: EMAIL_HOST_PASSWORD
         sync: false
+      - key: FRONTEND_URL
+        fromService:
+          type: static_site
+          name: happy-homes-frontend
+          property: host
 
   # Frontend Static Site
   - type: static_site

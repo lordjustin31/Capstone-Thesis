@@ -112,6 +112,11 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    
+    # Cloud storage (add before staticfiles if using Cloudinary)
+    # Uncomment when using Cloudinary:
+    # "cloudinary_storage",
+    
     "django.contrib.staticfiles",
 
     # Third party
@@ -243,24 +248,45 @@ SIMPLE_JWT = {
 # ---------------------------------------------------------
 # CORS & CSRF
 # ---------------------------------------------------------
+# Check CORS_ALLOW_ALL_ORIGINS first (highest priority)
 CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS allowed origins
+# If CORS_ALLOW_ALL_ORIGINS is True, we don't need to set CORS_ALLOWED_ORIGINS
+# But we'll still set defaults for when it's False
 CORS_ALLOWED_ORIGINS_ENV = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
-if CORS_ALLOWED_ORIGINS_ENV:
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(",") if origin.strip()]
+if CORS_ALLOW_ALL_ORIGINS:
+    # When allowing all origins, we don't need to specify individual origins
+    # But we can still set some defaults for reference
+    CORS_ALLOWED_ORIGINS = []  # Empty list means all origins are allowed
+elif CORS_ALLOWED_ORIGINS_ENV:
+    # Parse explicit origins (filter out wildcards)
+    origins = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(",") if origin.strip()]
+    CORS_ALLOWED_ORIGINS = [origin for origin in origins if "*" not in origin]
 else:
     # Default: allow localhost and Render domains
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
         "https://capstone-thesis-w018.onrender.com",
     ]
     
-    # If ALLOW_ALL_HOSTS is True, also allow all CORS origins
-    if ALLOW_ALL_HOSTS:
-        CORS_ALLOW_ALL_ORIGINS = True
+    # Also add Vercel URLs if FRONTEND_URL is set
+    frontend_url = os.environ.get("FRONTEND_URL", "")
+    if frontend_url:
+        # Extract domain from FRONTEND_URL
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(frontend_url)
+            if parsed.scheme and parsed.netloc:
+                vercel_url = f"{parsed.scheme}://{parsed.netloc}"
+                if vercel_url not in CORS_ALLOWED_ORIGINS:
+                    CORS_ALLOWED_ORIGINS.append(vercel_url)
+        except:
+            pass
 
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
@@ -277,8 +303,23 @@ else:
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
         "https://capstone-thesis-w018.onrender.com",
     ]
+    
+    # Also add Vercel URLs if FRONTEND_URL is set
+    frontend_url = os.environ.get("FRONTEND_URL", "")
+    if frontend_url:
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(frontend_url)
+            if parsed.scheme and parsed.netloc:
+                vercel_url = f"{parsed.scheme}://{parsed.netloc}"
+                if vercel_url not in CSRF_TRUSTED_ORIGINS:
+                    CSRF_TRUSTED_ORIGINS.append(vercel_url)
+        except:
+            pass
 
 # ---------------------------------------------------------
 # EMAIL
@@ -308,15 +349,29 @@ if not DEBUG:
     X_FRAME_OPTIONS = "DENY"
 
 # ---------------------------------------------------------
-# FILE STORAGE (S3 or Local)
+# FILE STORAGE (Cloudinary, S3, or Local)
 # ---------------------------------------------------------
+# Priority: Cloudinary > AWS S3 > Local Storage
+
+# Cloudinary Configuration (Easiest setup)
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME")
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY")
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET")
+
+# AWS S3 Configuration
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
 
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
+# Choose storage backend based on available credentials
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    # Use Cloudinary if credentials are set
+    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+elif AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
+    # Use AWS S3 if credentials are set
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
     AWS_QUERYSTRING_AUTH = False
 else:
+    # Fallback to local storage (files won't persist on Render free tier)
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"

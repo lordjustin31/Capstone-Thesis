@@ -621,9 +621,40 @@ const LoginPage: React.FC<LoginPageProps> = () => {
     e.preventDefault();
     setErrorMsg('');
 
+    // Helper function to make API call with retry for sleeping Render services
+    const fetchWithRetry = async (url: string, options: RequestInit, retries = 2): Promise<Response> => {
+      for (let i = 0; i <= retries; i++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 second timeout
+          
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          return response;
+        } catch (err: any) {
+          if (i === retries) throw err;
+          
+          // If it's a network error and we have retries left, wait and retry
+          if (err?.name === 'AbortError' || 
+              err?.message?.includes('Failed to fetch') || 
+              err?.message?.includes('NetworkError')) {
+            // Wait 2 seconds before retry (Render services take time to wake up)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw new Error('Max retries exceeded');
+    };
+
     try {
       // Use API config utility for base URL
-      const res = await fetch(`${API_BASE_URL}/api/token/`, {
+      const res = await fetchWithRetry(`${API_BASE_URL}/api/token/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -642,7 +673,7 @@ const LoginPage: React.FC<LoginPageProps> = () => {
       
       // Check if user is admin and redirect accordingly
       try {
-        const profileRes = await fetch(`${API_BASE_URL}/api/profile/`, {
+        const profileRes = await fetchWithRetry(`${API_BASE_URL}/api/profile/`, {
           headers: { Authorization: `Bearer ${data.access}` }
         });
         if (profileRes.ok) {
@@ -660,11 +691,12 @@ const LoginPage: React.FC<LoginPageProps> = () => {
         navigate('/home');
       }
     } catch (err: any) {
-      // Check if it's a network error (backend not running)
+      // Check if it's a network error (backend not running or sleeping)
       if (err?.message?.includes('Failed to fetch') || 
           err?.message?.includes('NetworkError') || 
-          err?.name === 'TypeError' && err?.message?.includes('fetch')) {
-        setErrorMsg(`Cannot connect to server. Please make sure the backend server is running at ${API_BASE_URL}`);
+          err?.name === 'TypeError' && err?.message?.includes('fetch') ||
+          err?.name === 'AbortError') {
+        setErrorMsg(`Cannot connect to server at ${API_BASE_URL}. The server may be sleeping (first request can take 30-60 seconds). Please wait and try again.`);
       } else if (err instanceof Error) {
         setErrorMsg(err.message);
       } else {
