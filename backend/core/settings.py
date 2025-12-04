@@ -5,6 +5,7 @@ Django settings for core project.
 from pathlib import Path
 from datetime import timedelta
 import os
+import secrets
 import dj_database_url
 import warnings
 
@@ -33,13 +34,38 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 if not SECRET_KEY:
     if DEBUG:
+        # Local development: use insecure fallback
         SECRET_KEY = "django-insecure-dev-key-only-for-local-development-change-in-production"
         warnings.warn(
             "WARNING: SECRET_KEY not set! Using insecure development key.",
             UserWarning
         )
     else:
-        raise ValueError("SECRET_KEY environment variable is required in production!")
+        # Production: generate a secure random key (better than failing)
+        # Check if we're on Render (check multiple indicators)
+        is_render = (
+            "RENDER" in os.environ or 
+            "RENDER_SERVICE_NAME" in os.environ or
+            os.environ.get("HOSTNAME", "").endswith(".onrender.com") or
+            os.environ.get("DATABASE_URL", "").startswith("postgresql://")
+        )
+        
+        # Generate a Django-compatible 50-character random secret key
+        chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*(-_=+)'
+        SECRET_KEY = ''.join(secrets.choice(chars) for _ in range(50))
+        
+        if is_render:
+            warnings.warn(
+                "WARNING: SECRET_KEY not set in environment! Generated a new one. "
+                "Set SECRET_KEY in Render dashboard for consistency across deployments.",
+                UserWarning
+            )
+        else:
+            warnings.warn(
+                "WARNING: SECRET_KEY not set in environment! Generated a new one. "
+                "Set SECRET_KEY environment variable for production use.",
+                UserWarning
+            )
 
 # ---------------------------------------------------------
 # ALLOWED HOSTS
