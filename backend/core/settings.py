@@ -5,19 +5,23 @@ Django settings for core project.
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
 
 # --- Base directory ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- Security ---
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-uo-ctnd*!(!2z!^5pg$1te=zjdjem@$*58i7@ex^q51o5q#wa!"
-)
+# SECRET_KEY must be set via environment variable - NEVER commit this!
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is required!")
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+# DEBUG must be False in production - set via environment variable
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS - for production, set specific domains
+# For Render: use your Render service URL or set via environment variable
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",") if os.environ.get("ALLOWED_HOSTS") else ["*"]
 
 # --- Applications ---
 INSTALLED_APPS = [
@@ -32,7 +36,6 @@ INSTALLED_APPS = [
     # Third-party apps
     "rest_framework",
     "rest_framework_simplejwt",
-    "corsheaders",
     "simple_history",
     
 
@@ -41,12 +44,15 @@ INSTALLED_APPS = [
     "core",
 ]
 
+# Allow CORS
+INSTALLED_APPS += [
+    'corsheaders',
+]
+
 # --- Middleware ---
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",                  
     "django.middleware.security.SecurityMiddleware",           # Security headers
     "whitenoise.middleware.WhiteNoiseMiddleware",             # Static files in production
-    # CORS
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -55,6 +61,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
 ]
+
+# Insert CORS middleware at the beginning
+MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware")
 
 ROOT_URLCONF = "core.urls"
 
@@ -78,15 +87,9 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # --- Database ---
+# Uses PostgreSQL on Render (via DATABASE_URL env var) or empty string for local SQLite fallback
 DATABASES = {
-    "default": {
-        "ENGINE": os.environ.get("DB_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.environ.get("DB_NAME", BASE_DIR / "db.sqlite3"),
-        "USER": os.environ.get("DB_USER", ""),
-        "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-        "HOST": os.environ.get("DB_HOST", ""),
-        "PORT": os.environ.get("DB_PORT", ""),
-    }
+    "default": dj_database_url.config(default="")
 }
 
 # --- Password validators ---
@@ -104,8 +107,8 @@ USE_I18N = True
 USE_TZ = True
 
 # --- Static & Media ---
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"  # Production
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Production
 STATICFILES_DIRS = [BASE_DIR / "static"]  # Local dev
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -135,23 +138,31 @@ SIMPLE_JWT = {
 }
 
 # --- CORS & CSRF ---
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS configuration - for production, set specific origins
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower() == "true"
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "https://caps-rouge.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-   
-    "https://caps-em1t.onrender.com",
-]
+# Get allowed origins from environment or use defaults
+CORS_ALLOWED_ORIGINS_ENV = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+if CORS_ALLOWED_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(",")]
+else:
+    # Default origins (development)
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://caps-rouge.vercel.app",
-    "https://caps-em1t.onrender.com", 
-]
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS", "")
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",")]
+else:
+    # Default origins (development)
+    CSRF_TRUSTED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 # --- Email ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -175,15 +186,19 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
+# --- File Storage ---
+# Use S3 only if AWS credentials are provided, otherwise use local storage
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
-AWS_QUERYSTRING_AUTH = False 
 
-if DEBUG:
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
+    # Use S3 for production
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1")
+    AWS_QUERYSTRING_AUTH = False
+else:
+    # Use local file storage (default)
     DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
     MEDIA_URL = "/media/"
     MEDIA_ROOT = BASE_DIR / "media"
