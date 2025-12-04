@@ -22,9 +22,27 @@ from django.conf.urls.static import static
 
 from api import views 
 from api.views import UserHistoryListView, active_visitors, api_root
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def simple_api_root(request):
+    """Simple fallback API root that doesn't use DRF"""
+    return JsonResponse({
+        'message': 'Happy Homes API',
+        'version': '1.0',
+        'endpoints': {
+            'api': '/api/',
+            'admin': '/admin/',
+            'token': '/api/token/',
+            'register': '/api/register/',
+        }
+    })
 
 urlpatterns = [
     path('', api_root, name='api_root'),
+    # Fallback route (commented out - use if api_root fails)
+    # path('', simple_api_root, name='simple_api_root'),
     path('admin/', admin.site.urls),
     path('admin/users/', views.admin_user_list, name='admin_user_list'),
     path('admin/users/<int:pk>/', views.admin_user_detail, name='admin_user_detail'),

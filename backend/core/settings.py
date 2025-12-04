@@ -233,21 +233,35 @@ CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "False").lower
 CORS_ALLOW_CREDENTIALS = True
 
 # CORS allowed origins
-CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
-if CORS_ALLOWED_ORIGINS == [""]:
+CORS_ALLOWED_ORIGINS_ENV = os.environ.get("CORS_ALLOWED_ORIGINS", "").strip()
+if CORS_ALLOWED_ORIGINS_ENV:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS_ENV.split(",") if origin.strip()]
+else:
+    # Default: allow localhost and Render domains
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://capstone-thesis-w018.onrender.com",
     ]
+    
+    # If ALLOW_ALL_HOSTS is True, also allow all CORS origins
+    if ALLOW_ALL_HOSTS:
+        CORS_ALLOW_ALL_ORIGINS = True
 
 # CSRF trusted origins
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",")
-if CSRF_TRUSTED_ORIGINS == [""]:
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
+if CSRF_TRUSTED_ORIGINS_ENV:
+    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",") if origin.strip()]
+else:
+    # Default: allow localhost and Render domains
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "https://*.onrender.com",
+        "https://capstone-thesis-w018.onrender.com",
+        "https://*.onrender.com",  # Note: Django doesn't support wildcards, but keeping for reference
     ]
+    # Remove wildcard and add common Render pattern
+    CSRF_TRUSTED_ORIGINS = [origin for origin in CSRF_TRUSTED_ORIGINS if not origin.endswith("*")]
 
 # ---------------------------------------------------------
 # EMAIL

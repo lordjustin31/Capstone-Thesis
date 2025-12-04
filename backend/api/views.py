@@ -569,12 +569,12 @@ def admin_user_detail(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'HEAD', 'OPTIONS'])
 @permission_classes([AllowAny])
 def api_root(request):
     """Root API endpoint that provides basic API information"""
     try:
-        return Response({
+        data = {
             'message': 'Happy Homes API',
             'version': '1.0',
             'endpoints': {
@@ -583,19 +583,41 @@ def api_root(request):
                 'token': '/api/token/',
                 'register': '/api/register/',
             }
-        }, status=status.HTTP_200_OK)
+        }
+        
+        # Handle OPTIONS request for CORS preflight
+        if request.method == 'OPTIONS':
+            response = Response(status=status.HTTP_200_OK)
+        else:
+            response = Response(data, status=status.HTTP_200_OK)
+        
+        return response
     except Exception as e:
+        # Log the error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in api_root: {str(e)}", exc_info=True)
+        
         # Fallback to JsonResponse if DRF Response fails
-        return JsonResponse({
-            'message': 'Happy Homes API',
-            'version': '1.0',
-            'endpoints': {
-                'api': '/api/',
-                'admin': '/admin/',
-                'token': '/api/token/',
-                'register': '/api/register/',
-            }
-        }, status=200)
+        try:
+            return JsonResponse({
+                'message': 'Happy Homes API',
+                'version': '1.0',
+                'endpoints': {
+                    'api': '/api/',
+                    'admin': '/admin/',
+                    'token': '/api/token/',
+                    'register': '/api/register/',
+                }
+            }, status=200)
+        except Exception as e2:
+            # Ultimate fallback - plain text response
+            from django.http import HttpResponse
+            return HttpResponse(
+                '{"message":"Happy Homes API","version":"1.0","endpoints":{"api":"/api/","admin":"/admin/","token":"/api/token/","register":"/api/register/"}}',
+                content_type='application/json',
+                status=200
+            )
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
