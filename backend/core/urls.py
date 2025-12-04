@@ -19,13 +19,9 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
-from django.urls import path, include
 
 from api import views 
 from api.views import UserHistoryListView, active_visitors, api_root
-from django.conf import settings
-from django.conf.urls.static import static # <-- import your Django app views here
 
 urlpatterns = [
     path('', api_root, name='api_root'),

@@ -573,16 +573,29 @@ def admin_user_detail(request, pk):
 @permission_classes([AllowAny])
 def api_root(request):
     """Root API endpoint that provides basic API information"""
-    return Response({
-        'message': 'Happy Homes API',
-        'version': '1.0',
-        'endpoints': {
-            'api': '/api/',
-            'admin': '/admin/',
-            'token': '/api/token/',
-            'register': '/api/register/',
-        }
-    })
+    try:
+        return Response({
+            'message': 'Happy Homes API',
+            'version': '1.0',
+            'endpoints': {
+                'api': '/api/',
+                'admin': '/admin/',
+                'token': '/api/token/',
+                'register': '/api/register/',
+            }
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        # Fallback to JsonResponse if DRF Response fails
+        return JsonResponse({
+            'message': 'Happy Homes API',
+            'version': '1.0',
+            'endpoints': {
+                'api': '/api/',
+                'admin': '/admin/',
+                'token': '/api/token/',
+                'register': '/api/register/',
+            }
+        }, status=200)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
