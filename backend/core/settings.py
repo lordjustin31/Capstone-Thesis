@@ -265,17 +265,20 @@ else:
 # CSRF trusted origins
 CSRF_TRUSTED_ORIGINS_ENV = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
 if CSRF_TRUSTED_ORIGINS_ENV:
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",") if origin.strip()]
+    # Filter out wildcards (Django doesn't support them)
+    origins = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS_ENV.split(",") if origin.strip()]
+    CSRF_TRUSTED_ORIGINS = [origin for origin in origins if "*" not in origin]
+    
+    # If ALLOW_ALL_HOSTS is True, add the Render domain explicitly
+    if ALLOW_ALL_HOSTS and "https://capstone-thesis-w018.onrender.com" not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append("https://capstone-thesis-w018.onrender.com")
 else:
     # Default: allow localhost and Render domains
     CSRF_TRUSTED_ORIGINS = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "https://capstone-thesis-w018.onrender.com",
-        "https://*.onrender.com",  # Note: Django doesn't support wildcards, but keeping for reference
     ]
-    # Remove wildcard and add common Render pattern
-    CSRF_TRUSTED_ORIGINS = [origin for origin in CSRF_TRUSTED_ORIGINS if not origin.endswith("*")]
 
 # ---------------------------------------------------------
 # EMAIL
