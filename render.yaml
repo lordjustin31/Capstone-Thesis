@@ -4,7 +4,7 @@ services:
     name: happy-homes-backend
     env: python
     buildCommand: cd backend && pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: cd backend && python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
+    startCommand: if [ -d "backend" ]; then cd backend; fi && python manage.py migrate && gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -37,5 +37,5 @@ services:
           name: happy-homes-backend
           property: host
 
-# No database needed - using SQLite
+# Database: PostgreSQL (auto-configured via DATABASE_URL)
 
