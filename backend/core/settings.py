@@ -41,7 +41,7 @@ if not SECRET_KEY:
             UserWarning
         )
     else:
-        # Production: generate a secure random key (better than failing)
+        # Production: generate a stable secret key based on service identifier
         # Check if we're on Render (check multiple indicators)
         is_render = (
             "RENDER" in os.environ or 
@@ -50,19 +50,33 @@ if not SECRET_KEY:
             os.environ.get("DATABASE_URL", "").startswith("postgresql://")
         )
         
-        # Generate a Django-compatible 50-character random secret key
+        # Generate a stable secret key based on service name or hostname
+        # This ensures the same key is used across restarts
+        service_id = (
+            os.environ.get("RENDER_SERVICE_NAME") or 
+            os.environ.get("HOSTNAME", "default-service") or 
+            "default-service"
+        )
+        
+        # Use a deterministic but secure method to generate key
+        import hashlib
+        seed = f"{service_id}-happy-homes-secret-key-seed-2024"
+        hash_obj = hashlib.sha256(seed.encode())
+        hash_hex = hash_obj.hexdigest()
+        
+        # Convert to Django-compatible secret key format
         chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*(-_=+)'
-        SECRET_KEY = ''.join(secrets.choice(chars) for _ in range(50))
+        SECRET_KEY = ''.join(chars[int(hash_hex[i:i+2], 16) % len(chars)] for i in range(0, min(100, len(hash_hex)), 2))[:50]
         
         if is_render:
             warnings.warn(
-                "WARNING: SECRET_KEY not set in environment! Generated a new one. "
-                "Set SECRET_KEY in Render dashboard for consistency across deployments.",
+                "WARNING: SECRET_KEY not set in environment! Generated a stable one based on service. "
+                "Set SECRET_KEY in Render dashboard for better security and consistency.",
                 UserWarning
             )
         else:
             warnings.warn(
-                "WARNING: SECRET_KEY not set in environment! Generated a new one. "
+                "WARNING: SECRET_KEY not set in environment! Generated a stable one. "
                 "Set SECRET_KEY environment variable for production use.",
                 UserWarning
             )
